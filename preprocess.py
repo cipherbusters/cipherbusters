@@ -1,8 +1,10 @@
-from utils.utils import DATA_DIR
+from utils.utils import DATA_DIR, tokenize
 from utils.ciphers import caesar_encode, CAESAR_VOCAB
 import tensorflow_datasets as tfds
 import argparse
 from tqdm import tqdm
+import tensorflow as tf
+import numpy as np
 dataset = tfds.load('wikipedia/20201201.en', split='train')
 
 
@@ -33,13 +35,22 @@ def generate(args):
 
 
 def generate_caesar(args):
-    with open(DATA_DIR / 'caesar.txt', 'w') as fout:
-        with open(DATA_DIR / 'clean.txt', 'r') as fin:
-            for line in tqdm(fin, total=args.n):
-                plaintext = line[:-1]
-                ciphertext = caesar_encode(plaintext, args.k)
-                fout.write(ciphertext + '\n')
-                fout.write(plaintext + '\n')
+    progbar = tqdm(total=args.n * len(CAESAR_VOCAB))
+    for k in range(len(CAESAR_VOCAB)):
+        tokenized_plain = []
+        tokenized_cipher = []
+        with open(DATA_DIR / 'clean.txt', 'r') as f:
+            for line in f:
+                plaintext = line[:-1] + ' '
+                ciphertext = caesar_encode(plaintext, k) + ' '
+                tokenized_plain.append(tokenize(plaintext))
+                tokenized_cipher.append(tokenize(ciphertext))
+                progbar.update()
+        tokenized_plain = np.concatenate(tokenized_plain, 0)
+        tokenized_cipher = np.concatenate(tokenized_cipher, 0)
+        np.savez(DATA_DIR / f'caesar_{k}',
+                 plain=tokenized_plain, cipher=tokenized_cipher)
+    progbar.clear()
 
 
 def main(args):
@@ -52,8 +63,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=['generate', 'caesar'])
-    parser.add_argument('--n', type=int, default=1000000)
-    parser.add_argument('--k', type=int, default=3)
+    parser.add_argument('-n', type=int, default=20000)
 
     args = parser.parse_args()
 
