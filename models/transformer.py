@@ -3,7 +3,7 @@ import tensorflow as tf
 import transformer_utils
 
 class Transformer(tf.keras.Model): 
-    def __init__(self, window_size=10, alphabel_size=37, embedding_size=10):
+    def __init__(self, window_size, alphabel_size, embedding_size):
         super(Transformer, self).__init__()
         self.window_size = window_size
         self.alphabel_size = alphabel_size
