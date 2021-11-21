@@ -13,7 +13,9 @@ def build_tokens():
     return tokenizer, detokenizer
 
 
-SPECIAL_TOKENS = ['<start>', '<stop>']
+START_TOKEN = '<start>'
+STOP_TOKEN = '<stop>'
+SPECIAL_TOKENS = [START_TOKEN, STOP_TOKEN]
 tokenizer, detokenizer = build_tokens()
 
 
