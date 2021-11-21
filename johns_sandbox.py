@@ -1,5 +1,6 @@
-from token import STAR
 import numpy as np
+import tensorflow as tf
+from token import STAR
 from utils.utils import START_TOKEN, STOP_TOKEN, tokenizer
 
 def pad_corpus(ciphered_text, window_size):
@@ -17,22 +18,12 @@ def pad_corpus(ciphered_text, window_size):
     return ciphered_text
 
 def get_batches(inputs, labels, batch_size):
-    input_batches = []
-    label_batches = []
-
     i = 0
     while i < len(inputs):
-        input_batch = inputs[i: i + batch_size]
-        label_batch = labels[i: i + batch_size]
-
-        input_batches.append(input_batch)
-        label_batches.append(label_batch)
-
+        yield inputs[i: i + batch_size], labels[i: i + batch_size]
         i += batch_size
 
-    return input_batches, label_batches
-
-def load_caesar_data(file_name, window_size):
+def load_caesar_data(file_name, window_size, batch_size, shuffle=True):
     data = np.load(file_name)
     ciphers = data["cipher"]
     plain = data["plain"]
@@ -40,4 +31,11 @@ def load_caesar_data(file_name, window_size):
     padded_ciphers = pad_corpus(ciphers, window_size)
     padded_plain = pad_corpus(plain, window_size)
 
-    return get_batches(padded_ciphers, padded_plain)
+    if shuffle:
+        indices  = tf.range(0, tf.shape(padded_ciphers)[0])
+        indices = tf.random.shuffle(indices)
+
+        padded_ciphers = tf.gather(padded_ciphers, indices)
+        padded_plain = tf.gather(padded_plain, indices)
+
+    return get_batches(padded_ciphers, padded_plain, batch_size)
