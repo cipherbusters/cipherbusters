@@ -34,3 +34,23 @@ def detokenize(t) -> str:
         if decoded_c not in SPECIAL_TOKENS:
             decoded.append(decoded_c)
     return ''.join(decoded)
+
+def pad_corpus(ciphered_text, window_size):
+    window_size -= 2
+    num_windows = ciphered_text.size // window_size
+    ciphered_text = ciphered_text[: num_windows * window_size]
+    ciphered_text = np.reshape(ciphered_text, (-1, window_size))
+
+    start_tokens = np.ones(num_windows, dtype=np.uint8) * tokenizer[START_TOKEN]
+    stop_tokens = np.ones(num_windows, dtype=np.uint8) * tokenizer[STOP_TOKEN]
+    ciphered_text = np.transpose(np.concatenate(start_tokens,
+                                                np.transpose(ciphered_text),
+                                                stop_tokens))
+
+    return ciphered_text
+
+def get_batches(inputs, labels, batch_size):
+    i = 0
+    while i < len(inputs):
+        yield inputs[i: i + batch_size], labels[i: i + batch_size]
+        i += batch_size
