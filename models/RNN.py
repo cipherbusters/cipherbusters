@@ -37,7 +37,7 @@ class RNN(tf.keras.Model):
     
     def accuracy(self, probs, labels):
         pred = tf.argmax(input=probs, axis=2)
-        accuracy = tf.reduce_mean(tf.cast(tf.equal(pred, labels), dtype=tf.float32))
+        accuracy = np.mean(pred == tf.cast(labels, dtype=tf.int64))
         return accuracy
     
     def loss(self, probs, labels):

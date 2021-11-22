@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from utils.utils import pad_corpus, get_batches
 
-def load_data(file_name, window_size, batch_size, shuffle=True, train_pct=0.85):
+def load_data(file_name, window_size, batch_size, shuffle=True, train_pct=0.8):
     data = np.load(file_name)
     ciphers = data["cipher"]
     plain = data["plain"]

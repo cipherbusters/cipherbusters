@@ -27,9 +27,9 @@ def tokenize(s: str):
 
 
 def detokenize(t) -> str:
-    characters = tf.reshape(tf.convert_to_tensor(t), -1).tolist()
+    #characters = tf.reshape(tf.convert_to_tensor(t), -1).tolist()
     decoded = []
-    for c in characters:
+    for c in t:
         decoded_c = detokenizer[c]
         if decoded_c not in SPECIAL_TOKENS:
             decoded.append(decoded_c)
