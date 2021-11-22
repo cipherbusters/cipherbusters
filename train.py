@@ -1,10 +1,11 @@
-from utils.utils import get_batches
+from utils.utils import get_batches, DATA_DIR, tokenizer
 import tensorflow as tf
 import numpy as np
-from RNN import RNN
-from transformer import Transformer
+from models.RNN import RNN
+from models.transformer import Transformer
 import sys
 import argparse
+from data_loaders.caesar import load_data
 
 def parseArguments():
     parser = argparse.ArgumentParser()
@@ -43,19 +44,19 @@ def main(args):
 	# train_dataloader, test_dataloader, alphabet = None, None, None
 
     if args.is_rnn:
-        model = RNN()
+        model = RNN(len(tokenizer))
     else:
         model = Transformer() 
 
 	num_epochs = 1
-	for _ in range(num_epochs):
-        train(model, train_dataloader)
+    train_dataloader, test_dataloader = load_data(DATA_DIR / 'caesar_3.npz', 100, 128)
 
+    for _ in range(num_epochs):
+        train(model, train_dataloader)
 	# TODO: Set up the testing steps
 	acc = test(model, test_dataloader)
-
-	pass
+    print(f"Accuracy: {acc}")
 
 if __name__ == '__main__':
     args = parseArguments()
-	main(args)
+    main(args)

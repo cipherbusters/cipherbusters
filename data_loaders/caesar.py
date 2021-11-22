@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from utils.utils import pad_corpus, get_batches
 
-def load_data(file_name, window_size, batch_size, shuffle=True):
+def load_data(file_name, window_size, batch_size, shuffle=True, train_pct=0.85):
     data = np.load(file_name)
     ciphers = data["cipher"]
     plain = data["plain"]
@@ -17,4 +17,9 @@ def load_data(file_name, window_size, batch_size, shuffle=True):
         padded_ciphers = tf.gather(padded_ciphers, indices)
         padded_plain = tf.gather(padded_plain, indices)
 
-    return get_batches(padded_ciphers, padded_plain, batch_size)
+    train_ciphers = padded_ciphers[:int(len(padded_ciphers) * train_pct)]
+    test_ciphers = padded_ciphers[int(len(padded_ciphers) * train_pct):]
+    train_plain = padded_plain[:int(len(padded_ciphers) * train_pct)]
+    test_plain = padded_plain[int(len(padded_ciphers) * train_pct):]
+
+    return get_batches(train_ciphers, train_plain, batch_size), get_batches(test_ciphers, test_plain, batch_size)
