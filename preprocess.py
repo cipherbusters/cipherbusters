@@ -42,7 +42,7 @@ def generate_caesar(args):
         with open(DATA_DIR / 'clean.txt', 'r') as f:
             for line in f:
                 plaintext = line[:-1] + ' '
-                ciphertext = caesar_encode(plaintext, k) + ' '
+                ciphertext = caesar_encode(plaintext, k)
                 tokenized_plain.append(tokenize(plaintext))
                 tokenized_cipher.append(tokenize(ciphertext))
                 progbar.update()
