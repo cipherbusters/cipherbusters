@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import transformer_utils
+import models.transformer_utils
 
 class Transformer(tf.keras.Model): 
     def __init__(self, window_size, alphabel_size, embedding_size):

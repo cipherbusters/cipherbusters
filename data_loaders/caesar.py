@@ -7,8 +7,8 @@ def load_data(file_name, window_size, batch_size, shuffle=True, train_pct=0.85):
     ciphers = data["cipher"]
     plain = data["plain"]
 
-    padded_ciphers = pad_corpus(ciphers, window_size)
-    padded_plain = pad_corpus(plain, window_size)
+    padded_ciphers = tf.convert_to_tensor(pad_corpus(ciphers, window_size))
+    padded_plain = tf.convert_to_tensor(pad_corpus(plain, window_size))
 
     if shuffle:
         indices  = tf.range(0, tf.shape(padded_ciphers)[0])
@@ -23,3 +23,4 @@ def load_data(file_name, window_size, batch_size, shuffle=True, train_pct=0.85):
     test_plain = padded_plain[int(len(padded_ciphers) * train_pct):]
 
     return get_batches(train_ciphers, train_plain, batch_size), get_batches(test_ciphers, test_plain, batch_size)
+    

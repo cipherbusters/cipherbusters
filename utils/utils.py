@@ -41,12 +41,11 @@ def pad_corpus(ciphered_text, window_size):
     ciphered_text = ciphered_text[: num_windows * window_size]
     ciphered_text = np.reshape(ciphered_text, (-1, window_size))
 
-    start_tokens = np.ones(num_windows, dtype=np.uint8) * tokenizer[START_TOKEN]
-    stop_tokens = np.ones(num_windows, dtype=np.uint8) * tokenizer[STOP_TOKEN]
-    ciphered_text = np.transpose(np.concatenate(start_tokens,
+    start_tokens = np.ones((1, num_windows), dtype=np.uint8) * tokenizer[START_TOKEN]
+    stop_tokens = np.ones((1, num_windows), dtype=np.uint8) * tokenizer[STOP_TOKEN]
+    ciphered_text = np.transpose(np.concatenate([start_tokens,
                                                 np.transpose(ciphered_text),
-                                                stop_tokens))
-
+                                                stop_tokens], axis=0))
     return ciphered_text
 
 def get_batches(inputs, labels, batch_size):

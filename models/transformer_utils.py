@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import numpy as np
 
-from attenvis import AttentionVis  
+from models.attenvis import AttentionVis  
 av = AttentionVis()
 
 @av.att_mat_func
@@ -99,19 +99,19 @@ class Transformer_Block(tf.keras.layers.Layer):
 		This functions calls a transformer block.
 
 		There are two possibilities for when this function is called.
-		    - if self.is_decoder == False, then:
-		        1) compute unmasked attention on the inputs
-		        2) residual connection and layer normalization
-		        3) feed forward layer
-		        4) residual connection and layer normalization
+			- if self.is_decoder == False, then:
+				1) compute unmasked attention on the inputs
+				2) residual connection and layer normalization
+				3) feed forward layer
+				4) residual connection and layer normalization
 
-		    - if self.is_decoder == True, then:
-		        1) compute MASKED attention on the inputs
-		        2) residual connection and layer normalization
-		        3) computed UNMASKED attention using context
-		        4) residual connection and layer normalization
-		        5) feed forward layer
-		        6) residual layer and layer normalization
+			- if self.is_decoder == True, then:
+				1) compute MASKED attention on the inputs
+				2) residual connection and layer normalization
+				3) computed UNMASKED attention using context
+				4) residual connection and layer normalization
+				5) feed forward layer
+				6) residual layer and layer normalization
 
 		:param inputs: tensor of [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x EMBEDDING_SIZE ]
 		:context: tensor of [BATCH_SIZE x FRENCH_WINDOW_SIZE x EMBEDDING_SIZE ] or None
