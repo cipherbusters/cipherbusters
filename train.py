@@ -10,8 +10,7 @@ from data_loaders.caesar import load_data
 def parseArguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--is_rnn", action="store_true")
-    parser.add_argument("--window_size", action="store_true")
-    parser.add_argument("--alphabet_size", action="store_true")
+    parser.add_argument("--window_size", type=int, default=20)
     parser.add_argument("--embedding_size", type=int, default=10)
     parser.add_argument("--learning_rate", type=int, default=1e-3)
     parser.add_argument("--batch_size", type=int, default=128)
@@ -44,12 +43,14 @@ def main(args):
 	# train_dataloader, test_dataloader, alphabet = None, None, None
 
     if args.is_rnn:
-        model = RNN(len(tokenizer))
+        model = RNN(len(tokenizer), args.embedding_size, args.window_size)
     else:
         model = Transformer() 
 
 	num_epochs = 1
-    train_dataloader, test_dataloader = load_data(DATA_DIR / 'caesar_3.npz', 100, 128)
+    train_dataloader, test_dataloader = load_data(DATA_DIR / 'caesar_3.npz', 
+                                                  args.window_size, 
+                                                  args.batch_size)
 
     for _ in range(num_epochs):
         train(model, train_dataloader)
