@@ -24,8 +24,8 @@ def parseArguments():
 def train(model, dataloader):
     loss_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
-        # reduce amount of training data by factor of 5
-        if i % 5 != 0: continue 
+        # reduce amount of training data by factor of 20
+        if i % 20 != 0: continue 
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:,1:], plaintext[:,:-1])
             loss = model.loss(probs, plaintext[:,1:])
@@ -40,8 +40,8 @@ def test(model, dataloader):
     print("TESTING ------------------")
     acc_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
-        # reduce amount of testing data by factor of 5
-        if i % 5 != 0: continue 
+        # reduce amount of testing data by factor of 20
+        if i % 20 != 0: continue 
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:,1:], plaintext[:,:-1])
             acc = model.accuracy(probs, plaintext[:,1:])
@@ -59,15 +59,28 @@ def main(args):
         model = Transformer(args.window_size, len(tokenizer), args.embedding_size) 
     else:
         model = RNN(len(tokenizer), args.embedding_size, args.window_size)
-
-    num_epochs = 1
-    train_dataloader, test_dataloader = load_data(DATA_DIR / 'caesar_3.npz', args.window_size, args.batch_size)
     
+    caesar_ciphers = [3, 11, 17, 21, 27]
+    train_dataloader = []
+    test_dataloader = []
+    for c in caesar_ciphers:
+        tr, te = load_data(DATA_DIR / f'caesar_{c}.npz', args.window_size, args.batch_size)
+        train_dataloader += tr
+        test_dataloader += te
+    
+    # shuffle train and test data
+    train_len = len(list(train_dataloader))
+    test_len = len(list(test_dataloader))
+    train_indices  = tf.random.shuffle(tf.range(0, train_len))
+    train_dataloader = tf.gather(train_dataloader, train_indices)
+    test_indices  = tf.random.shuffle(tf.range(0, test_len))
+    test_dataloader = tf.gather(test_dataloader, test_indices)
+    
+    num_epochs = 1
     for e in range(num_epochs):
         print(f"EPOCH {e} ------------------")
         train(model, train_dataloader)
 
-    # TODO: Set up the testing steps
     acc = test(model, test_dataloader)
     print(f"Accuracy: {acc}")
 

@@ -50,6 +50,6 @@ def pad_corpus(ciphered_text, window_size):
 
 def get_batches(inputs, labels, batch_size):
     i = 0
-    while i < len(inputs):
+    while i + batch_size < len(inputs):
         yield inputs[i: i + batch_size], labels[i: i + batch_size]
         i += batch_size
