@@ -3,6 +3,7 @@ from utils.ciphers import CAESAR_VOCAB
 import tensorflow as tf
 import numpy as np
 from models.RNN import RNN
+from models.simple_RNN import Simple_RNN
 from models.transformer import Transformer
 from tqdm import tqdm
 import argparse
@@ -13,7 +14,7 @@ import matplotlib.pyplot as plt
 CKPT_DIR = Path(__file__).parent / 'checkpoints'
 
 # for testing/debugging purposes to train models faster
-REDUCTION_FACTOR = 10
+REDUCTION_FACTOR = 50
 
 def parseArguments():
     parser = argparse.ArgumentParser()
@@ -31,7 +32,7 @@ def train(model, dataloader, optimizer):
     pbar = tqdm(dataloader, total=len(dataloader))
     loss_list = []
     for i, (ciphertext, plaintext) in enumerate(pbar):
-        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
+        if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:, 1:], plaintext[:, :-1])
             loss = model.loss(probs, plaintext[:, 1:])
@@ -46,10 +47,11 @@ def test(model, dataloader):
     print("TESTING ------------------")
     acc_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
-        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
+        if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         probs = model(ciphertext[:, 1:], plaintext[:, :-1])
         acc = model.accuracy(probs, plaintext[:, 1:])
         acc_list.append(acc)
+        print(detokenize(plaintext[:, 1:][0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
     print(f"Accuracy: {np.mean(acc_list)}")
 
 
@@ -58,7 +60,7 @@ def main(args):
         model = Transformer(args.window_size, len(
             tokenizer), args.embedding_size)
     else:
-        model = RNN(len(tokenizer), args.embedding_size,
+        model = Simple_RNN(len(tokenizer), args.embedding_size,
                     args.window_size)
 
     # load in ciphers
@@ -100,6 +102,7 @@ def main(args):
         #plt.show()
         
         test(model, test_dataloader)
+        
 
 
 if __name__ == '__main__':
