@@ -7,8 +7,12 @@ from tqdm import tqdm
 import argparse
 from data_loaders.caesar import load_data
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 CKPT_DIR = Path(__file__).parent.parent / 'checkpoints'
+
+# for testing/debugging purposes to train models faster
+REDUCTION_FACTOR = 5
 
 def parseArguments():
 	parser = argparse.ArgumentParser()
@@ -24,8 +28,7 @@ def parseArguments():
 def train(model, dataloader):
     loss_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
-        # reduce amount of training data by factor of 20
-        if i % 20 != 0: continue 
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out for actual training
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:,1:], plaintext[:,:-1])
             loss = model.loss(probs, plaintext[:,1:])
@@ -34,14 +37,13 @@ def train(model, dataloader):
         gradients = tape.gradient(loss, model.trainable_variables)
         model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         if i % 50 == 0: print(f"batch {i}\tloss: {np.round(loss,2)}\taccuracy: {np.round(acc,2)}")
-    return np.mean(loss_list)
+    return loss_list
 
 def test(model, dataloader):
     print("TESTING ------------------")
     acc_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
-        # reduce amount of testing data by factor of 20
-        if i % 20 != 0: continue 
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out for actual training
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:,1:], plaintext[:,:-1])
             acc = model.accuracy(probs, plaintext[:,1:])
@@ -60,7 +62,8 @@ def main(args):
     else:
         model = RNN(len(tokenizer), args.embedding_size, args.window_size)
     
-    caesar_ciphers = [3, 11, 17, 21, 27]
+    print("PREPARING DATA -----------")
+    caesar_ciphers = [0]
     train_dataloader = []
     test_dataloader = []
     for c in caesar_ciphers:
@@ -76,11 +79,15 @@ def main(args):
     test_indices  = tf.random.shuffle(tf.range(0, test_len))
     test_dataloader = tf.gather(test_dataloader, test_indices)
     
-    num_epochs = 1
+    num_epochs = 2
+    loss_list = []
     for e in range(num_epochs):
         print(f"EPOCH {e} ------------------")
-        train(model, train_dataloader)
-
+        loss_list += train(model, train_dataloader)
+    
+    plt.plot(loss_list)
+    plt.show()
+    
     acc = test(model, test_dataloader)
     print(f"Accuracy: {acc}")
 

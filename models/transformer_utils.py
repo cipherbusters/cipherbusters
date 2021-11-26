@@ -2,12 +2,11 @@ import numpy as np
 import tensorflow as tf
 import numpy as np
 
-from models.attenvis import AttentionVis  
-av = AttentionVis()
 
-@av.att_mat_func
 def Attention_Matrix(K, Q, use_mask=False):
 	"""
+	STUDENT MUST WRITE:
+
 	This functions runs a single attention head.
 
 	:param K: is [batch_size x window_size_keys x embedding_size]
@@ -40,6 +39,8 @@ class Atten_Head(tf.keras.layers.Layer):
 	def call(self, inputs_for_keys, inputs_for_values, inputs_for_queries):
 
 		"""
+		STUDENT MUST WRITE:
+
 		This functions runs a single attention head.
 
 		:param inputs_for_keys: tensor of [batch_size x [ENG/FRN]_WINDOW_SIZE x input_size ]
@@ -47,11 +48,12 @@ class Atten_Head(tf.keras.layers.Layer):
 		:param inputs_for_queries: tensor of [batch_size x [ENG/FRN]_WINDOW_SIZE x input_size ]
 		:return: tensor of [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x output_size ]
 		"""
+
 		K = tf.tensordot(inputs_for_keys, self.K, [[2],[0]])	# shape is [batch_size x window_size x output_size]
 		V = tf.tensordot(inputs_for_values, self.V, [[2],[0]])	# shape is [batch_size x window_size x output_size]
 		Q = tf.tensordot(inputs_for_queries, self.Q, [[2],[0]])	# shape is [batch_size x window_size x output_size]
 
-		atten = Attention_Matrix(K, Q, self.use_mask)   # shape is [batch_size x window_size x window_size]
+		atten = Attention_Matrix(K, Q, self.use_mask)	# shape is [batch_size x window_size x window_size]
 		
 		values = tf.matmul(atten, V)	# shape is [batch_size x window_size x output_size]
 
@@ -99,19 +101,21 @@ class Transformer_Block(tf.keras.layers.Layer):
 		This functions calls a transformer block.
 
 		There are two possibilities for when this function is called.
-			- if self.is_decoder == False, then:
-				1) compute unmasked attention on the inputs
-				2) residual connection and layer normalization
-				3) feed forward layer
-				4) residual connection and layer normalization
+		    - if self.is_decoder == False, then:
+		        1) compute unmasked attention on the inputs
+		        2) residual connection and layer normalization
+		        3) feed forward layer
+		        4) residual connection and layer normalization
 
-			- if self.is_decoder == True, then:
-				1) compute MASKED attention on the inputs
-				2) residual connection and layer normalization
-				3) computed UNMASKED attention using context
-				4) residual connection and layer normalization
-				5) feed forward layer
-				6) residual layer and layer normalization
+		    - if self.is_decoder == True, then:
+		        1) compute MASKED attention on the inputs
+		        2) residual connection and layer normalization
+		        3) computed UNMASKED attention using context
+		        4) residual connection and layer normalization
+		        5) feed forward layer
+		        6) residual layer and layer normalization
+
+		If the multi_headed==True, the model uses multiheaded attention (Only 2470 students must implement this)
 
 		:param inputs: tensor of [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x EMBEDDING_SIZE ]
 		:context: tensor of [BATCH_SIZE x FRENCH_WINDOW_SIZE x EMBEDDING_SIZE ] or None
