@@ -6,16 +6,27 @@ def build_vocab():
         decoder[i] = c
     return vocab, decoder
 
-
-CAESAR_VOCAB, CAESAR_DECODER = build_vocab()
-
+VOCAB, DECODER = build_vocab()
 
 def caesar_encode(s: str, k: int) -> str:
     outputs = []
     for c in s:
-        if c in CAESAR_VOCAB:
+        if c in VOCAB:
             outputs.append(
-                CAESAR_DECODER[(CAESAR_VOCAB[c] + k) % len(CAESAR_VOCAB)])
+                DECODER[(VOCAB[c] + k) % len(VOCAB)])
         else:
             outputs.append(c)
     return ''.join(outputs)
+
+SUB_1 = dict(zip(list("abcdefghijklmnopqrstuvwxyz0123456789"),
+                 list("1234567890qwertyuiopasdfghjklzxcvbnm")))
+
+def substitution_encode(s, substitution):
+    outputs = []
+    for plain_c in s:
+        if plain_c in VOCAB:
+            sub_c = substitution[plain_c]
+            outputs.append(sub_c)
+        else:
+            outputs.append(plain_c)
+    return "".join(outputs)
