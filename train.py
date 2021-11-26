@@ -12,9 +12,8 @@ import matplotlib.pyplot as plt
 
 CKPT_DIR = Path(__file__).parent / 'checkpoints'
 
-
 # for testing/debugging purposes to train models faster
-REDUCTION_FACTOR = 5
+REDUCTION_FACTOR = 10
 
 def parseArguments():
     parser = argparse.ArgumentParser()
@@ -30,20 +29,24 @@ def parseArguments():
 
 def train(model, dataloader, optimizer):
     pbar = tqdm(dataloader, total=len(dataloader))
-    for ciphertext, plaintext in pbar:
+    loss_list = []
+    for i, (ciphertext, plaintext) in enumerate(pbar):
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:, 1:], plaintext[:, :-1])
             loss = model.loss(probs, plaintext[:, 1:])
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        loss_list.append(loss)
         acc = model.accuracy(probs, plaintext[:, 1:])
         pbar.set_description(f'Loss: {loss.numpy().item():.2f} Accuracy: {acc.item():.2f}')
-
+    return loss_list
 
 def test(model, dataloader):
     print("TESTING ------------------")
     acc_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         probs = model(ciphertext[:, 1:], plaintext[:, :-1])
         acc = model.accuracy(probs, plaintext[:, 1:])
         acc_list.append(acc)
@@ -58,7 +61,7 @@ def main(args):
         model = RNN(len(tokenizer), args.embedding_size,
                     args.window_size)
 
-    # load in models
+    # load in ciphers
     caesar_ciphers = np.arange(len(CAESAR_VOCAB))
     np.random.shuffle(caesar_ciphers)
 
@@ -92,8 +95,9 @@ def main(args):
             checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
             model.save_weights(checkpoint_path)
 
-        plt.plot(loss_list)
-        plt.show()
+        # TODO: uncomment to display loss plots 
+        #plt.plot(loss_list)
+        #plt.show()
         
         test(model, test_dataloader)
 

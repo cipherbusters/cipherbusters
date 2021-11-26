@@ -19,8 +19,8 @@ class Transformer(tf.keras.Model):
         # TODO: left out positional encoding layer. re-evaluate later.
 
         self.encoder = utils.Transformer_Block(self.embedding_size, is_decoder=False)
-        self.decoder = tf.keras.Sequential([
-            utils.Transformer_Block(self.embedding_size, is_decoder=True),
+        self.decoder = utils.Transformer_Block(self.embedding_size, is_decoder=True)
+        self.fully_connected = tf.keras.Sequential([
             tf.keras.layers.Dense(512, activation='relu'),
             tf.keras.layers.Dense(self.alphabet_size, activation='softmax')
         ])
@@ -36,13 +36,14 @@ class Transformer(tf.keras.Model):
         plaintext_embs = self.emb_plaintext(plaintext)
 
         # decode the plaintext given an encoding of the ciphertext
-        probs = self.decoder(plaintext_embs, context=enc_out)
+        dec_out = self.decoder(plaintext_embs, context=enc_out)
 
+        probs = self.fully_connected(dec_out)
         return probs
     
     def accuracy(self, probs, labels):
         pred = tf.argmax(input=probs, axis=2)
-        accuracy = tf.reduce_mean(tf.cast(tf.equal(pred, labels), dtype=tf.float32))
+        accuracy = np.mean(pred == tf.cast(labels, dtype=tf.int64))
         return accuracy
     
     def loss(self, probs, labels):

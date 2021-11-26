@@ -2,7 +2,10 @@ import numpy as np
 import tensorflow as tf
 import numpy as np
 
+from models.attenvis import AttentionVis  
+av = AttentionVis()
 
+@av.att_mat_func
 def Attention_Matrix(K, Q, use_mask=False):
 	"""
 	STUDENT MUST WRITE:
@@ -19,7 +22,7 @@ def Attention_Matrix(K, Q, use_mask=False):
 	embedding_size = Q.get_shape()[2]
 	mask = tf.convert_to_tensor(value=np.transpose(np.tril(np.ones((window_size_queries,window_size_keys))*np.NINF,-1),(1,0)),dtype=tf.float32)
 	atten_mask = tf.tile(tf.reshape(mask,[-1,window_size_queries,window_size_keys]),[tf.shape(input=K)[0],1,1])
-	
+
 	scores = tf.matmul(Q, tf.transpose(K, perm=[0,2,1])) / float(np.sqrt(embedding_size))
 	if use_mask: scores = scores + atten_mask
 	return tf.nn.softmax(scores)
@@ -84,14 +87,14 @@ class Feed_Forwards(tf.keras.layers.Layer):
 		return layer_2_out
 
 class Transformer_Block(tf.keras.layers.Layer):
-	def __init__(self, emb_sz, is_decoder):
+	def __init__(self, emb_sz, is_decoder, multi_headed=False):
 		super(Transformer_Block, self).__init__()
 
 		self.ff_layer = Feed_Forwards(emb_sz)
-		self.self_atten = Atten_Head(emb_sz,emb_sz,use_mask=is_decoder)
+		self.self_atten = Atten_Head(emb_sz,emb_sz,use_mask=is_decoder) if not multi_headed else Multi_Headed(emb_sz,use_mask=is_decoder)
 		self.is_decoder = is_decoder
 		if self.is_decoder:
-			self.self_context_atten = Atten_Head(emb_sz,emb_sz,use_mask=False)
+			self.self_context_atten = Atten_Head(emb_sz,emb_sz,use_mask=False) if not multi_headed else Multi_Headed(emb_sz,use_mask=False)
 
 		self.layer_norm = tf.keras.layers.LayerNormalization(axis=-1)
 
