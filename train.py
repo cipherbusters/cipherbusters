@@ -3,14 +3,19 @@ from utils.ciphers import CAESAR_VOCAB
 import tensorflow as tf
 import numpy as np
 from models.RNN import RNN
+from models.simple_RNN import Simple_RNN
 from models.transformer import Transformer
+from models.simple_transformer import Simple_Transformer
 from tqdm import tqdm
 import argparse
 from data_loaders.caesar import load_data
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 CKPT_DIR = Path(__file__).parent / 'checkpoints'
 
+# for testing/debugging purposes to train models faster
+REDUCTION_FACTOR = 50
 
 def parseArguments():
     parser = argparse.ArgumentParser()
@@ -26,39 +31,40 @@ def parseArguments():
 
 def train(model, dataloader, optimizer):
     pbar = tqdm(dataloader, total=len(dataloader))
-    for ciphertext, plaintext in pbar:
+    loss_list = []
+    for i, (ciphertext, plaintext) in enumerate(pbar):
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:, 1:], plaintext[:, :-1])
             loss = model.loss(probs, plaintext[:, 1:])
         gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(
-            zip(gradients, model.trainable_variables))
-
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        loss_list.append(loss)
         acc = model.accuracy(probs, plaintext[:, 1:])
-        pbar.set_description(
-            f'Loss: {loss.numpy().item():.2f} Accuracy: {acc.item():.2f}')
-
+        pbar.set_description(f'Loss: {loss.numpy().item():.2f} Accuracy: {acc.item():.2f}')
+    return loss_list
 
 def test(model, dataloader):
     print("TESTING ------------------")
     acc_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         probs = model(ciphertext[:, 1:], plaintext[:, :-1])
         acc = model.accuracy(probs, plaintext[:, 1:])
         acc_list.append(acc)
-        # pred = tf.argmax(input=probs, axis=2)
+        #print(detokenize(plaintext[:, 1:][0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
     print(f"Accuracy: {np.mean(acc_list)}")
 
 
 def main(args):
     if args.is_transformer:
-        model = Transformer(args.window_size, len(
+        model = Simple_Transformer(args.window_size, len(
             tokenizer), args.embedding_size)
     else:
-        model = RNN(len(tokenizer), args.embedding_size,
+        model = Simple_RNN(len(tokenizer), args.embedding_size,
                     args.window_size)
 
-    # load in models
+    # load in ciphers
     caesar_ciphers = np.arange(len(CAESAR_VOCAB))
     np.random.shuffle(caesar_ciphers)
 
@@ -80,19 +86,24 @@ def main(args):
         test_indices = tf.random.shuffle(tf.range(0, test_len))
         test_dataloader = tf.gather(test_dataloader, test_indices)
 
+        loss_list = []
+        optimizer = tf.keras.optimizers.Adam(learning_rate=args.learning_rate)
         for e in range(args.num_epochs):
-            optimizer = tf.keras.optimizers.Adam(
-                learning_rate=args.learning_rate)
             print(f'EPOCH {e} of {args.num_epochs} ------------------')
-            train(model, train_dataloader, optimizer)
+            loss_list += train(model, train_dataloader, optimizer)
 
-            checkpoint_path = CKPT_DIR / 'caesar_rnn' / \
-                f'{"+".join(map(lambda x: str(x), ciphers))}' / \
-                f'{e:04d}.ckpt'
-            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-            model.save_weights(checkpoint_path)
+            #checkpoint_path = CKPT_DIR / 'caesar_rnn' / \
+            #    f'{"+".join(map(lambda x: str(x), ciphers))}' / \
+            #    f'{e:04d}.ckpt'
+            #checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            #model.save_weights(checkpoint_path)
 
+        # TODO: uncomment to display loss plots 
+        #plt.plot(loss_list)
+        #plt.show()
+        
         test(model, test_dataloader)
+        
 
 
 if __name__ == '__main__':
