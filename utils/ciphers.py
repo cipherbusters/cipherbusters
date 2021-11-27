@@ -1,3 +1,6 @@
+from os import EX_CANTCREAT
+import random
+
 def build_vocab():
     vocab = {}
     decoder = {}
@@ -18,15 +21,50 @@ def caesar_encode(s: str, k: int) -> str:
             outputs.append(c)
     return ''.join(outputs)
 
-SUB_1 = dict(zip(list("abcdefghijklmnopqrstuvwxyz0123456789"),
-                 list("1234567890qwertyuiopasdfghjklzxcvbnm")))
+
+# SUBSTITUTION
+def generate_substitutions():
+    subs = []
+    for _ in range(100):
+        keys = list(VOCAB.keys())
+        vals = keys.copy()
+        random.shuffle(vals)
+
+        sub = dict(zip(keys, vals))
+        subs.append(sub)
+
+    return subs
+
+SUBSTITUTIONS = generate_substitutions()
 
 def substitution_encode(s, substitution):
-    outputs = []
+    encryption = []
     for plain_c in s:
-        if plain_c in VOCAB:
+        if VOCAB.has_key(plain_c):
             sub_c = substitution[plain_c]
-            outputs.append(sub_c)
+            encryption.append(sub_c)
         else:
-            outputs.append(plain_c)
-    return "".join(outputs)
+            encryption.append(plain_c)
+        
+    return "".join(encryption)
+
+
+# VIGENERE
+
+# def build_matrix():
+#     matrix = []
+#     for c in VOCAB:
+
+
+# def vigenere_encode(s, key):
+#     encryption = []
+#     for i, plain_c in enumerate(s):
+#         if plain_c in VOCAB:
+#             vig_c = (ord(plain_c) + key[i % len(key)]) % VOCAB_SIZE
+#             vig_c += ord("A")
+
+
+#         else:
+#             encryption.append(plain_c)
+
+#     return "".join(encryption)
