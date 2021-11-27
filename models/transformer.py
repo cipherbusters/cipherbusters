@@ -8,10 +8,6 @@ class Transformer(tf.keras.Model):
         self.window_size = window_size
         self.alphabet_size = alphabet_size
         self.embedding_size = embedding_size
-        self.learning_rate = 1e-3
-        self.batch_size = 128
-        
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 
         self.emb_ciphertext = tf.keras.layers.Embedding(self.alphabet_size, self.embedding_size)
         self.emb_plaintext = tf.keras.layers.Embedding(self.alphabet_size, self.embedding_size)

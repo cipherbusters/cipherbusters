@@ -5,6 +5,7 @@ import numpy as np
 from models.RNN import RNN
 from models.simple_RNN import Simple_RNN
 from models.transformer import Transformer
+from models.simple_transformer import Simple_Transformer
 from tqdm import tqdm
 import argparse
 from data_loaders.caesar import load_data
@@ -32,7 +33,7 @@ def train(model, dataloader, optimizer):
     pbar = tqdm(dataloader, total=len(dataloader))
     loss_list = []
     for i, (ciphertext, plaintext) in enumerate(pbar):
-        if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         with tf.GradientTape() as tape:
             probs = model(ciphertext[:, 1:], plaintext[:, :-1])
             loss = model.loss(probs, plaintext[:, 1:])
@@ -47,17 +48,17 @@ def test(model, dataloader):
     print("TESTING ------------------")
     acc_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
-        if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
+        #if i % REDUCTION_FACTOR != 0: continue  # TODO: comment out during actual evaluation
         probs = model(ciphertext[:, 1:], plaintext[:, :-1])
         acc = model.accuracy(probs, plaintext[:, 1:])
         acc_list.append(acc)
-        print(detokenize(plaintext[:, 1:][0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
+        #print(detokenize(plaintext[:, 1:][0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
     print(f"Accuracy: {np.mean(acc_list)}")
 
 
 def main(args):
     if args.is_transformer:
-        model = Transformer(args.window_size, len(
+        model = Simple_Transformer(args.window_size, len(
             tokenizer), args.embedding_size)
     else:
         model = Simple_RNN(len(tokenizer), args.embedding_size,
@@ -91,11 +92,11 @@ def main(args):
             print(f'EPOCH {e} of {args.num_epochs} ------------------')
             loss_list += train(model, train_dataloader, optimizer)
 
-            checkpoint_path = CKPT_DIR / 'caesar_rnn' / \
-                f'{"+".join(map(lambda x: str(x), ciphers))}' / \
-                f'{e:04d}.ckpt'
-            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-            model.save_weights(checkpoint_path)
+            #checkpoint_path = CKPT_DIR / 'caesar_rnn' / \
+            #    f'{"+".join(map(lambda x: str(x), ciphers))}' / \
+            #    f'{e:04d}.ckpt'
+            #checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            #model.save_weights(checkpoint_path)
 
         # TODO: uncomment to display loss plots 
         #plt.plot(loss_list)
