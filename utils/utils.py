@@ -36,12 +36,14 @@ def detokenize(t) -> str:
     return ''.join(decoded)
 
 
-def pad_corpus(ciphered_text, window_size):
-    window_size -= 2
+def pad_corpus(ciphered_text, window_size, add_startstop=True):
+    if add_startstop:
+        window_size -= 2
     num_windows = ciphered_text.size // window_size
     ciphered_text = ciphered_text[: num_windows * window_size]
     ciphered_text = np.reshape(ciphered_text, (-1, window_size))
-
+    if not add_startstop:
+        return ciphered_text
     start_tokens = np.ones(
         (1, num_windows), dtype=np.uint8) * tokenizer[START_TOKEN]
     stop_tokens = np.ones(
