@@ -3,7 +3,7 @@ import tensorflow as tf
 from utils.utils import pad_corpus, get_batches
 
 
-def load_data(file_name, window_size, batch_size, shuffle=True, use_pct=1.0, train_pct=0.8):
+def load_data(file_name, window_size, batch_size, add_startstop=True, shuffle=True, use_pct=1.0, train_pct=0.8):
     data = np.load(file_name)
 
     # load data and cut out unused data
@@ -11,8 +11,9 @@ def load_data(file_name, window_size, batch_size, shuffle=True, use_pct=1.0, tra
     ciphers = data["cipher"][:int(data_len * use_pct)]
     plain = data["plain"][:int(data_len * use_pct)]
 
-    padded_ciphers = tf.convert_to_tensor(pad_corpus(ciphers, window_size))
-    padded_plain = tf.convert_to_tensor(pad_corpus(plain, window_size))
+    
+    padded_ciphers = tf.convert_to_tensor(pad_corpus(ciphers, window_size, add_startstop))
+    padded_plain = tf.convert_to_tensor(pad_corpus(plain, window_size, add_startstop))
 
     if shuffle:
         indices = tf.range(0, tf.shape(padded_ciphers)[0])
