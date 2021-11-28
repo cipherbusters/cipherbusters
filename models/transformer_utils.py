@@ -34,9 +34,9 @@ class Atten_Head(tf.keras.layers.Layer):
 
 		self.use_mask = use_mask
 
-		self.K = self.add_weight(shape=(input_size, output_size), initializer='random_normal', trainable=True)
-		self.V = self.add_weight(shape=(input_size, output_size), initializer='random_normal', trainable=True)
-		self.Q = self.add_weight(shape=(input_size, output_size), initializer='random_normal', trainable=True)
+		self.K = self.add_weight(shape=(input_size, output_size), initializer='random_normal', trainable=True, name='K')
+		self.V = self.add_weight(shape=(input_size, output_size), initializer='random_normal', trainable=True, name='V')
+		self.Q = self.add_weight(shape=(input_size, output_size), initializer='random_normal', trainable=True, name='Q')
 		
 	@tf.function
 	def call(self, inputs_for_keys, inputs_for_values, inputs_for_queries):

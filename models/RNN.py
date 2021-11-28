@@ -1,60 +1,31 @@
 import numpy as np
 import tensorflow as tf
-from utils.utils import START_TOKEN, detokenizer, STOP_TOKEN, tokenize, tokenizer
+from models.base import Base
 
-class RNN(tf.keras.Model):
-    def __init__(self, alphabet_size, embedding_size, window_size):
-        super(RNN, self).__init__()
-        self.window_size = window_size
-        self.alphabet_size = alphabet_size
+class RNN(Base):
+    def __init__(self, alphabet_size):
+        super().__init__(alphabet_size)
 
-        self.emb_ciphertext = tf.keras.layers.Embedding(
-            self.alphabet_size, self.embedding_size)
-        self.emb_plaintext = tf.keras.layers.Embedding(
-            self.alphabet_size, self.embedding_size)
+        self.encoder = tf.keras.layers.LSTM(self.alphabet_size, return_state=True)
+        self.decoder = tf.keras.layers.LSTM(self.alphabet_size, return_sequences=True)
+        self.fully_connected = tf.keras.Sequential([
+            tf.keras.layers.Dense(512, activation='relu'),
+            tf.keras.layers.Dense(self.alphabet_size, activation='softmax')
+        ])
 
-        self.encoder = tf.keras.layers.LSTM(
-            self.embedding_size, return_sequences=True, return_state=True)
-        self.decoder = tf.keras.layers.LSTM(
-            self.embedding_size, return_sequences=True, return_state=True)
-        self.dense = tf.keras.layers.Dense(
-            self.alphabet_size, activation='softmax')
-
-    def call(self, ciphertext, plaintext):
-        # embed the ciphertext characters
-        ciphertext_embs = self.emb_ciphertext(ciphertext)
-
-        # encode the ciphertext in a cell_state/hidden_state
-        _, cell_state, hidden_state = self.encoder(
-            ciphertext_embs, initial_state=None)
-
-        # embed the plaintext characters
-        plaintext_embs = self.emb_plaintext(plaintext)
-
-        # decode the plaintext given an encoding of the ciphertext by teacher forcing
-        decoded, _, _ = self.decoder(
-            plaintext_embs, initial_state=(cell_state, hidden_state))
-        probs = self.dense(decoded)
-
+    def call(self, ciphertext):
+        # embed the ciphertext using one-hot encodings
+        ciphertext = tf.one_hot(ciphertext, self.alphabet_size)
+        
+        # pass the ciphertext through an lstm, producing output at each time step
+        _, state_h, state_c = self.encoder(ciphertext)
+        out = self.decoder(ciphertext, initial_state=(state_h, state_c))
+        
+        # run sequential output through dense layer to get probability distribution over alphabet
+        probs = self.fully_connected(out)
+        
         return probs
-    
-    def decode(self, cipher):
-        cipher = tf.convert_to_tensor(np.concatenate([[tokenizer[START_TOKEN]], tokenize(cipher)]))
-        cipher = tf.expand_dims(cipher, axis=0)
-        cipher = self.emb_ciphertext(cipher)
-        # encode the ciphertext in a cell_state/hidden_state
-        _, cell_state, hidden_state = self.encoder(
-            cipher, initial_state=None)
-        output = []
-        decoded_char = START_TOKEN
-        while decoded_char != STOP_TOKEN:
-            decoded = tf.expand_dims([tokenizer[decoded_char]], axis=0)
-            decoded = self.emb_plaintext(decoded)
-            decoded, cell_state, hidden_state = self.decoder(decoded, initial_state=(cell_state, hidden_state))
-            probs = self.dense(decoded)
-            decoded_char = detokenizer[tf.argmax(probs, axis=2).numpy().item()]
-            output.append(decoded_char)
-        return ''.join(output[:-1])
+        
 
     def accuracy(self, probs, labels):
         pred = tf.argmax(input=probs, axis=2)
@@ -63,3 +34,4 @@ class RNN(tf.keras.Model):
 
     def loss(self, probs, labels):
         return tf.reduce_mean(tf.keras.losses.sparse_categorical_crossentropy(labels, probs))
+

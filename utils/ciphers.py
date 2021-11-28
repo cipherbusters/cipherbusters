@@ -1,4 +1,3 @@
-from os import EX_CANTCREAT
 import random
 
 def build_vocab():

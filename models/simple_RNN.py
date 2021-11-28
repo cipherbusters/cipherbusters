@@ -1,17 +1,15 @@
 import numpy as np
 import tensorflow as tf
+from models.base import Base
 
-
-class Simple_RNN(tf.keras.Model):
-    def __init__(self, alphabet_size, embedding_size, window_size):
-        super(Simple_RNN, self).__init__()
-        self.window_size = window_size
-        self.alphabet_size = alphabet_size
+class Simple_RNN(Base):
+    def __init__(self, alphabet_size):
+        super().__init__(alphabet_size)
 
         self.lstm = tf.keras.layers.LSTM(self.alphabet_size, return_sequences=True)
         self.dense = tf.keras.layers.Dense(self.alphabet_size, activation='softmax')
 
-    def call(self, ciphertext, plaintext):
+    def call(self, ciphertext):
         # embed the ciphertext using one-hot encodings
         ciphertext = tf.one_hot(ciphertext, self.alphabet_size)
         
