@@ -102,31 +102,13 @@ def main(args):
         print(model.decrypt('ymj htrrzsnxyx inxifns yt htshjfq ymjnw 0nj1x fsi fnrx ymj3 tujsq3 ijhqfwj ymfy ymjnw jsix hfs gj fyyfnsji tsq3 g3 ymj ktwhngqj t0jwymwt1 tk fqq j2nxynsl xthnfq htsinyntsx qjy ymj wzqnsl hqfxxjx ywjrgqj fy f htrrzsnxynh wj0tqzynts ymj uwtqjyfwnfsx mf0j stymnsl yt qtxj gzy ymjnw hmfnsx ymj3 mf0j f 1twqi yt 1ns'))
     else: 
         optimizer = tf.keras.optimizers.Adam(learning_rate=args.learning_rate)
-        accs = []
-        for i in range(len(caesar_ciphers)):
-            ciphers = caesar_ciphers[:i+1]
-            train_dataloader = []
-            test_dataloader = []
-            for c in ciphers:
-                tr, te = load_data(
-                    DATA_DIR / f'caesar_{c}.npz', args.window_size, args.batch_size, use_pct=1 / len(ciphers))
-                train_dataloader += list(tr)
-                test_dataloader += list(te)
-            train_len = len(train_dataloader)
-            test_len = len(test_dataloader)
-            train_indices = tf.random.shuffle(tf.range(0, train_len))
-            train_dataloader = tf.gather(train_dataloader, train_indices)
-            test_indices = tf.random.shuffle(tf.range(0, test_len))
-            test_dataloader = tf.gather(test_dataloader, test_indices)
-            for e in range(args.num_epochs):
-                print(f'EPOCH {e+1} of {args.num_epochs} ------------------')
-                train(model, train_dataloader, optimizer)
-                checkpoint_path = CKPT_DIR / str(args.model) / f'{e:04d}.ckpt'
-                checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-                model.save_weights(checkpoint_path)
-            acc = test(model, test_dataloader)
-            accs.append(acc)
-        print(accs)
+        for e in range(args.num_epochs):
+            print(f'EPOCH {e+1} of {args.num_epochs} ------------------')
+            train(model, train_dataloader, optimizer)
+            checkpoint_path = CKPT_DIR / str(args.model) / f'{e:04d}.ckpt'
+            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            model.save_weights(checkpoint_path)
+        test(model, test_dataloader)
         
         
         
