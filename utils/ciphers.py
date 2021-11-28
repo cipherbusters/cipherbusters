@@ -41,7 +41,7 @@ SUBSTITUTIONS = generate_substitutions()
 def substitution_encode(s, substitution):
     encryption = []
     for plain_c in s:
-        if VOCAB.has_key(plain_c):
+        if plain_c in VOCAB:
             sub_c = substitution[plain_c]
             encryption.append(sub_c)
         else:
@@ -52,20 +52,27 @@ def substitution_encode(s, substitution):
 
 # VIGENERE
 
-# def build_matrix():
-#     matrix = []
-#     for c in VOCAB:
+def build_matrix():
+    keys = list(VOCAB.keys())
+    matrix = dict(zip(keys, 
+                      [{}] * len(keys)))
+    
+    for i, key in enumerate(matrix.keys()):
+        row = keys[i:] + keys[:i]
+        matrix[key] = dict(zip(keys, row))
 
+    return matrix
 
-# def vigenere_encode(s, key):
-#     encryption = []
-#     for i, plain_c in enumerate(s):
-#         if plain_c in VOCAB:
-#             vig_c = (ord(plain_c) + key[i % len(key)]) % VOCAB_SIZE
-#             vig_c += ord("A")
+ENCRYPTION_MAT = build_matrix()
 
+def vigenere_encode(s, key):
+    encryption = []
+    for i, plain_c in enumerate(s):
+        if plain_c in VOCAB:
+            key_c = key[i % len(key)]
+            vig_c = ENCRYPTION_MAT[plain_c][key_c]
+            encryption.append(vig_c)
+        else:
+            encryption.append(plain_c)
 
-#         else:
-#             encryption.append(plain_c)
-
-#     return "".join(encryption)
+    return "".join(encryption)
