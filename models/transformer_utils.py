@@ -8,6 +8,8 @@ av = AttentionVis()
 @av.att_mat_func
 def Attention_Matrix(K, Q, use_mask=False):
 	"""
+	STUDENT MUST WRITE:
+
 	This functions runs a single attention head.
 
 	:param K: is [batch_size x window_size_keys x embedding_size]
@@ -20,7 +22,7 @@ def Attention_Matrix(K, Q, use_mask=False):
 	embedding_size = Q.get_shape()[2]
 	mask = tf.convert_to_tensor(value=np.transpose(np.tril(np.ones((window_size_queries,window_size_keys))*np.NINF,-1),(1,0)),dtype=tf.float32)
 	atten_mask = tf.tile(tf.reshape(mask,[-1,window_size_queries,window_size_keys]),[tf.shape(input=K)[0],1,1])
-	
+
 	scores = tf.matmul(Q, tf.transpose(K, perm=[0,2,1])) / float(np.sqrt(embedding_size))
 	if use_mask: scores = scores + atten_mask
 	return tf.nn.softmax(scores)
@@ -40,6 +42,8 @@ class Atten_Head(tf.keras.layers.Layer):
 	def call(self, inputs_for_keys, inputs_for_values, inputs_for_queries):
 
 		"""
+		STUDENT MUST WRITE:
+
 		This functions runs a single attention head.
 
 		:param inputs_for_keys: tensor of [batch_size x [ENG/FRN]_WINDOW_SIZE x input_size ]
@@ -47,11 +51,12 @@ class Atten_Head(tf.keras.layers.Layer):
 		:param inputs_for_queries: tensor of [batch_size x [ENG/FRN]_WINDOW_SIZE x input_size ]
 		:return: tensor of [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x output_size ]
 		"""
+
 		K = tf.tensordot(inputs_for_keys, self.K, [[2],[0]])	# shape is [batch_size x window_size x output_size]
 		V = tf.tensordot(inputs_for_values, self.V, [[2],[0]])	# shape is [batch_size x window_size x output_size]
 		Q = tf.tensordot(inputs_for_queries, self.Q, [[2],[0]])	# shape is [batch_size x window_size x output_size]
 
-		atten = Attention_Matrix(K, Q, self.use_mask)   # shape is [batch_size x window_size x window_size]
+		atten = Attention_Matrix(K, Q, self.use_mask)	# shape is [batch_size x window_size x window_size]
 		
 		values = tf.matmul(atten, V)	# shape is [batch_size x window_size x output_size]
 
@@ -82,14 +87,14 @@ class Feed_Forwards(tf.keras.layers.Layer):
 		return layer_2_out
 
 class Transformer_Block(tf.keras.layers.Layer):
-	def __init__(self, emb_sz, is_decoder):
+	def __init__(self, emb_sz, is_decoder, multi_headed=False):
 		super(Transformer_Block, self).__init__()
 
 		self.ff_layer = Feed_Forwards(emb_sz)
-		self.self_atten = Atten_Head(emb_sz,emb_sz,use_mask=is_decoder)
+		self.self_atten = Atten_Head(emb_sz,emb_sz,use_mask=is_decoder) if not multi_headed else Multi_Headed(emb_sz,use_mask=is_decoder)
 		self.is_decoder = is_decoder
 		if self.is_decoder:
-			self.self_context_atten = Atten_Head(emb_sz,emb_sz,use_mask=False)
+			self.self_context_atten = Atten_Head(emb_sz,emb_sz,use_mask=False) if not multi_headed else Multi_Headed(emb_sz,use_mask=False)
 
 		self.layer_norm = tf.keras.layers.LayerNormalization(axis=-1)
 
@@ -99,19 +104,21 @@ class Transformer_Block(tf.keras.layers.Layer):
 		This functions calls a transformer block.
 
 		There are two possibilities for when this function is called.
-			- if self.is_decoder == False, then:
-				1) compute unmasked attention on the inputs
-				2) residual connection and layer normalization
-				3) feed forward layer
-				4) residual connection and layer normalization
+		    - if self.is_decoder == False, then:
+		        1) compute unmasked attention on the inputs
+		        2) residual connection and layer normalization
+		        3) feed forward layer
+		        4) residual connection and layer normalization
 
-			- if self.is_decoder == True, then:
-				1) compute MASKED attention on the inputs
-				2) residual connection and layer normalization
-				3) computed UNMASKED attention using context
-				4) residual connection and layer normalization
-				5) feed forward layer
-				6) residual layer and layer normalization
+		    - if self.is_decoder == True, then:
+		        1) compute MASKED attention on the inputs
+		        2) residual connection and layer normalization
+		        3) computed UNMASKED attention using context
+		        4) residual connection and layer normalization
+		        5) feed forward layer
+		        6) residual layer and layer normalization
+
+		If the multi_headed==True, the model uses multiheaded attention (Only 2470 students must implement this)
 
 		:param inputs: tensor of [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x EMBEDDING_SIZE ]
 		:context: tensor of [BATCH_SIZE x FRENCH_WINDOW_SIZE x EMBEDDING_SIZE ] or None

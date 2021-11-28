@@ -3,11 +3,10 @@ import tensorflow as tf
 from utils.utils import START_TOKEN, detokenizer, STOP_TOKEN, tokenize, tokenizer
 
 class RNN(tf.keras.Model):
-    def __init__(self, alphabet_size, embedding_size=128, window_size=100):
+    def __init__(self, alphabet_size, embedding_size, window_size):
         super(RNN, self).__init__()
         self.window_size = window_size
         self.alphabet_size = alphabet_size
-        self.embedding_size = embedding_size
 
         self.emb_ciphertext = tf.keras.layers.Embedding(
             self.alphabet_size, self.embedding_size)
