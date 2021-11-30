@@ -10,7 +10,7 @@ def build_vocab():
 
 VOCAB, DECODER = build_vocab()
 
-
+# CAESAR
 def caesar_encode(s: str, k: int) -> str:
     outputs = []
     for c in s:
@@ -23,19 +23,12 @@ def caesar_encode(s: str, k: int) -> str:
 
 
 # SUBSTITUTION
-def generate_substitutions():
-    subs = []
-    for _ in range(100):
-        keys = list(VOCAB.keys())
-        vals = keys.copy()
-        random.shuffle(vals)
-
-        sub = dict(zip(keys, vals))
-        subs.append(sub)
-
-    return subs
-
-SUBSTITUTIONS = generate_substitutions()
+def generate_substitution():
+    keys = list(VOCAB.keys())
+    vals = keys.copy()
+    random.shuffle(vals)
+    sub = dict(zip(keys, vals))
+    return sub
 
 def substitution_encode(s, substitution):
     encryption = []
@@ -50,7 +43,6 @@ def substitution_encode(s, substitution):
 
 
 # VIGENERE
-
 def build_matrix():
     keys = list(VOCAB.keys())
     matrix = dict(zip(keys, 

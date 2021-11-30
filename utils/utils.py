@@ -1,6 +1,7 @@
 from pathlib import Path
 import tensorflow as tf
 import numpy as np
+from .ciphers import generate_substitution, substitution_encode
 DATA_DIR = Path(__file__).parent.parent / 'data'
 
 
@@ -59,3 +60,16 @@ def get_batches(inputs, labels, batch_size):
     while i + batch_size < len(inputs):
         yield inputs[i: i + batch_size], labels[i: i + batch_size]
         i += batch_size
+    
+def get_substitution_batches(plaintext, batch_size, batch_limit):
+    for _ in range(batch_limit):
+        sub = generate_substitution()
+        i = np.random.randint(len(plaintext)-batch_size, size=1)[0]
+        inputs = []
+        labels = []
+        for s in plaintext[i:i+batch_size]:
+            inputs.append(tokenize(substitution_encode(s, sub)))
+            labels.append(tokenize(s))
+        inputs = np.array(inputs)
+        labels = np.array(labels)
+        yield inputs, labels

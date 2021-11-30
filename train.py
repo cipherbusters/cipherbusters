@@ -1,4 +1,4 @@
-from utils.utils import DATA_DIR, tokenizer, detokenize
+from utils.utils import DATA_DIR, tokenizer, tokenize, detokenize
 from utils.ciphers import VOCAB
 import tensorflow as tf
 import numpy as np
@@ -8,17 +8,16 @@ from models.transformer import Transformer
 from models.simple_transformer import Simple_Transformer
 from tqdm import tqdm
 import argparse
-from data_loaders.caesar import load_data
+from data_loaders import caesar, substitution
 from pathlib import Path
 import matplotlib.pyplot as plt
 
 CKPT_DIR = Path(__file__).parent / 'checkpoints'
 
-# for testing/debugging purposes to train models faster
-
 def parseArguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str)
+    parser.add_argument("--task", type=str)
     parser.add_argument("--window_size", type=int, default=50)
     parser.add_argument("--learning_rate", type=int, default=1e-3)
     parser.add_argument("--batch_size", type=int, default=256)
@@ -29,7 +28,7 @@ def parseArguments():
 
 
 def train(model, dataloader, optimizer):
-    pbar = tqdm(dataloader, total=len(dataloader))
+    pbar = tqdm(list(dataloader), total=len(list(dataloader)))
     loss_list = []
     for i, (ciphertext, plaintext) in enumerate(pbar):
         with tf.GradientTape() as tape:
@@ -42,6 +41,7 @@ def train(model, dataloader, optimizer):
         pbar.set_description(f'Loss: {loss.numpy().item():.2f} Accuracy: {acc.item():.2f}')
     print(detokenize(plaintext[:, 1:][0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
     return loss_list
+
 
 def test(model, dataloader):
     print("TESTING ------------------")
@@ -57,6 +57,31 @@ def test(model, dataloader):
     print(f"Accuracy: {acc}")
     return acc
 
+
+def get_caesar_dataloaders():
+    caesar_ciphers = np.arange(len(VOCAB))
+    np.random.shuffle(caesar_ciphers)
+    
+    ciphers = caesar_ciphers[:len(caesar_ciphers)]
+    print(f'Training ciphers: {ciphers}')
+    train_dataloader = []
+    test_dataloader = []
+    for c in ciphers:
+        tr, te = caesar.load_data(
+            DATA_DIR / f'caesar_{c}.npz', args.window_size, args.batch_size, use_pct=1 / len(ciphers))
+        train_dataloader += list(tr)
+        test_dataloader += list(te)
+    
+    train_len = len(train_dataloader)
+    test_len = len(test_dataloader)
+    train_indices = tf.random.shuffle(tf.range(0, train_len))
+    train_dataloader = tf.gather(train_dataloader, train_indices)
+    test_indices = tf.random.shuffle(tf.range(0, test_len))
+    test_dataloader = tf.gather(test_dataloader, test_indices)
+    
+    return train_dataloader, test_dataloader   
+
+
 def get_model(args):
     if args.model == 'SIMPLE_RNN':
         return Simple_RNN(len(tokenizer))
@@ -67,28 +92,20 @@ def get_model(args):
     elif args.model == 'RNN':
         return RNN(len(tokenizer))
 
+
+def get_dataloaders(args):
+    if args.task == "CAESAR":
+        return get_caesar_dataloaders()
+    elif args.task == "SUBSTITUTION":
+        return substitution.load_data(DATA_DIR / "clean.txt", args.window_size, args.batch_size)
+    elif args.task == "VIGENERE":
+        # TODO:
+        return None
+
+
 def main(args):
     model = get_model(args)
-
-    # load in ciphers
-    caesar_ciphers = np.arange(len(VOCAB))
-    np.random.shuffle(caesar_ciphers)
-    
-    ciphers = caesar_ciphers[:len(caesar_ciphers)]
-    print(f'Training ciphers: {ciphers}')
-    train_dataloader = []
-    test_dataloader = []
-    for c in ciphers:
-        tr, te = load_data(
-            DATA_DIR / f'caesar_{c}.npz', args.window_size, args.batch_size, use_pct=1 / len(ciphers))
-        train_dataloader += list(tr)
-        test_dataloader += list(te)
-    train_len = len(train_dataloader)
-    test_len = len(test_dataloader)
-    train_indices = tf.random.shuffle(tf.range(0, train_len))
-    train_dataloader = tf.gather(train_dataloader, train_indices)
-    test_indices = tf.random.shuffle(tf.range(0, test_len))
-    test_dataloader = tf.gather(test_dataloader, test_indices)
+    train_dataloader, test_dataloader = get_dataloaders(args)
     
     if args.load:
         # run the model once before loading weights to figure out shapes
