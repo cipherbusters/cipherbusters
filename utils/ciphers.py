@@ -43,6 +43,11 @@ def substitution_encode(s, substitution):
 
 
 # VIGENERE
+def generate_key():
+    str_len = random.randint(1, 10)
+    key = random.choices(list(VOCAB.keys()), k=str_len)
+    return "".join(key)
+
 def build_matrix():
     keys = list(VOCAB.keys())
     matrix = dict(zip(keys, 
