@@ -1,4 +1,4 @@
-from utils.utils import DATA_DIR, tokenizer, tokenize, detokenize
+from utils.utils import DATA_DIR, tokenizer, detokenize
 from utils.ciphers import VOCAB
 import tensorflow as tf
 import numpy as np
@@ -8,7 +8,7 @@ from models.transformer import Transformer
 from models.simple_transformer import Simple_Transformer
 from tqdm import tqdm
 import argparse
-from data_loaders import caesar, substitution
+from data_loaders import caesar, substitution, vigenere
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -16,30 +16,32 @@ CKPT_DIR = Path(__file__).parent / 'checkpoints'
 
 def parseArguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str)
-    parser.add_argument("--task", type=str)
+    parser.add_argument("--model", type=str, required=True)
+    parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--window_size", type=int, default=50)
-    parser.add_argument("--learning_rate", type=int, default=1e-3)
+    parser.add_argument("--learning_rate", type=int, default=3e-3)
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--num_epochs", type=int, default=10)
+    parser.add_argument('--epoch_batches', type=int, default=10000)
     parser.add_argument("--load", type=str, default=None)
     args = parser.parse_args()
     return args
 
 
-def train(model, dataloader, optimizer):
-    pbar = tqdm(list(dataloader), total=len(list(dataloader)))
+def train(model, dataloader, optimizer, num_batches):
+    pbar = tqdm(dataloader, total=num_batches)
     loss_list = []
     for i, (ciphertext, plaintext) in enumerate(pbar):
         with tf.GradientTape() as tape:
-            probs = model(ciphertext[:, 1:])
-            loss = model.loss(probs, plaintext[:, 1:])
+            probs = model(ciphertext)
+            loss = model.loss(probs, plaintext)
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         loss_list.append(loss)
-        acc = model.accuracy(probs, plaintext[:, 1:])
+        acc = model.accuracy(probs, plaintext)
         pbar.set_description(f'Loss: {loss.numpy().item():.2f} Accuracy: {acc.item():.2f}')
-    print(detokenize(plaintext[:, 1:][0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
+        if i == num_batches - 1:
+            print(detokenize(plaintext[0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
     return loss_list
 
 
@@ -51,8 +53,8 @@ def test(model, dataloader):
         probs = model(ciphertext[:, 1:])
         acc = model.accuracy(probs, plaintext[:, 1:])
         acc_list.append(acc)
-        if i % len(dataloader) // 10 == 0:
-            print(detokenize(plaintext[:, 1:][0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
+        if i < 10:
+            print(detokenize(plaintext[0]), "\t", detokenize(tf.argmax(input=probs, axis=2)[0]))
     acc = np.mean(acc_list)
     print(f"Accuracy: {acc}")
     return acc
@@ -97,10 +99,10 @@ def get_dataloaders(args):
     if args.task == "CAESAR":
         return get_caesar_dataloaders()
     elif args.task == "SUBSTITUTION":
-        return substitution.load_data(DATA_DIR / "clean.txt", args.window_size, args.batch_size)
+        return substitution.load_data(DATA_DIR / "clean.txt", args.window_size, args.batch_size, args.epoch_batches)
     elif args.task == "VIGENERE":
         # TODO:
-        return None
+        return vigenere.load_data(DATA_DIR / "clean.txt", args.window_size, args.batch_size, args.epoch_batches)
 
 
 def main(args):
@@ -120,11 +122,17 @@ def main(args):
     else: 
         optimizer = tf.keras.optimizers.Adam(learning_rate=args.learning_rate)
         for e in range(args.num_epochs):
+            if args.task == 'CAESAR':
+                train_dataloader = list(train_dataloader)
+                num_batches = len(train_dataloader)
+            else:
+                num_batches = args.epoch_batches
             print(f'EPOCH {e+1} of {args.num_epochs} ------------------')
-            train(model, train_dataloader, optimizer)
+            train(model, train_dataloader, optimizer, num_batches)
             checkpoint_path = CKPT_DIR / str(args.model) / f'{e:04d}.ckpt'
             checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
             model.save_weights(checkpoint_path)
+            train_dataloader, test_dataloader = get_dataloaders(args)
         test(model, test_dataloader)
         
         

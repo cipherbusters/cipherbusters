@@ -37,7 +37,7 @@ def detokenize(t) -> str:
     return ''.join(decoded)
 
 
-def pad_corpus(ciphered_text, window_size, add_startstop=True):
+def pad_corpus(ciphered_text, window_size, add_startstop=False):
     if add_startstop:
         window_size -= 2
     num_windows = ciphered_text.size // window_size

@@ -3,7 +3,7 @@ import tensorflow as tf
 from utils.utils import pad_corpus, get_batches
 
 
-def load_data(file_name, window_size, batch_size, add_startstop=True, shuffle=True, use_pct=1.0, train_pct=0.8):
+def load_data(file_name, window_size, batch_size, add_startstop=False, shuffle=True, use_pct=1.0, train_pct=0.8):
     data = np.load(file_name)
 
     # load data and cut out unused data
