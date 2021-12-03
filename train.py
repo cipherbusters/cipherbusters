@@ -6,8 +6,9 @@ from models.RNN import RNN
 from models.simple_RNN import Simple_RNN
 from models.transformer import Transformer
 from models.simple_transformer import Simple_Transformer
+from models.beefy_transformer import Beefy_Transformer
 from tqdm import tqdm
-import argparse
+import argparse 
 from dataloaders.caesar import CaesarDataset
 from dataloaders.vigenere import VigenereDataset
 from dataloaders.substitution import SubstitutionDataset
@@ -76,6 +77,8 @@ def get_model(args):
         return Transformer(len(tokenizer))
     elif args.model == 'RNN':
         return RNN(len(tokenizer))
+    elif args.model == 'BEEFY_TRANSFORMER':
+        return Beefy_Transformer(len(tokenizer))
 
 
 def get_dataset(args):
@@ -110,8 +113,9 @@ def main(args):
             checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
             model.save_weights(checkpoint_path)
         test(model, dataset)
-
-
+        
+        
+        
 if __name__ == '__main__':
     args = parseArguments()
     main(args)
