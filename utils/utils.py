@@ -61,10 +61,10 @@ def get_batches(inputs, labels, batch_size):
         yield inputs[i: i + batch_size], labels[i: i + batch_size]
         i += batch_size
     
-def get_substitution_batches(plaintext, batch_size, batch_limit):
-    for _ in range(batch_limit):
+def get_substitution_batches(plaintext, batch_size):
+    i = 0
+    while i + batch_size < len(inputs):
         sub = generate_substitution()
-        i = np.random.randint(len(plaintext)-batch_size, size=1)[0]
         inputs = []
         labels = []
         for s in plaintext[i:i+batch_size]:
@@ -75,9 +75,9 @@ def get_substitution_batches(plaintext, batch_size, batch_limit):
         yield inputs, labels
 
 def get_vigenere_batches(plaintext, batch_size, batch_limit):
-    for _ in range(batch_limit):
+    i = 0
+    while i + batch_size < len(inputs):
         key = generate_key()
-        i = np.random.randint(len(plaintext)-batch_size, size=1)[0]
         inputs = []
         labels = []
         for s in plaintext[i:i+batch_size]:
@@ -86,3 +86,4 @@ def get_vigenere_batches(plaintext, batch_size, batch_limit):
         inputs = np.array(inputs)
         labels = np.array(labels)
         yield inputs, labels
+
