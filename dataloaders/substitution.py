@@ -6,11 +6,9 @@ from utils.utils import pad_corpus, get_substitution_batches
 
 
 class SubstitutionDataset(Dataloader):
-    def __init__(self, batch_size, window_size, epoch_batches, train_pct=0.8):
+    def __init__(self, batch_size, window_size, train_pct=0.8):
         self.batch_size = batch_size
         self.window_size = window_size
-        self.train_batches = int(epoch_batches * train_pct)
-        self.test_batches = int(epoch_batches * (1 - train_pct))
         self.train_pct = train_pct
         self.load_data()
 
@@ -29,13 +27,13 @@ class SubstitutionDataset(Dataloader):
             len(windowed_plain) * self.train_pct):]
 
     def get_train_epoch(self):
-        return get_substitution_batches(self.train_plain, self.batch_size, self.train_batches)
+        return get_substitution_batches(self.train_plain, self.batch_size)
 
     def get_train_len(self):
-        return self.train_batches
+        return len(self.train_plain) // self.batch_size
 
     def get_test_epoch(self):
-        return get_substitution_batches(self.test_plain, self.batch_size, self.test_batches)
+        return get_substitution_batches(self.test_plain, self.batch_size)
 
     def get_test_len(self):
-        return self.test_batches
+        return len(self.test_plain) // self.batch_size

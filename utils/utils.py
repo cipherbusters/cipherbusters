@@ -63,7 +63,7 @@ def get_batches(inputs, labels, batch_size):
     
 def get_substitution_batches(plaintext, batch_size):
     i = 0
-    while i + batch_size < len(inputs):
+    while i + batch_size < len(plaintext):
         sub = generate_substitution()
         inputs = []
         labels = []
@@ -74,9 +74,9 @@ def get_substitution_batches(plaintext, batch_size):
         labels = np.array(labels)
         yield inputs, labels
 
-def get_vigenere_batches(plaintext, batch_size, batch_limit):
+def get_vigenere_batches(plaintext, batch_size):
     i = 0
-    while i + batch_size < len(inputs):
+    while i + batch_size < len(plaintext):
         key = generate_key()
         inputs = []
         labels = []

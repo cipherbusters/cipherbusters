@@ -23,10 +23,9 @@ def parseArguments():
     parser.add_argument("--model", type=str, required=True)
     parser.add_argument("--dataset", type=str, required=True)
     parser.add_argument("--window_size", type=int, default=50)
-    parser.add_argument("--learning_rate", type=int, default=3e-3)
+    parser.add_argument("--learning_rate", type=int, default=1e-3)
     parser.add_argument("--batch_size", type=int, default=256)
-    parser.add_argument("--num_epochs", type=int, default=10)
-    parser.add_argument('--epoch_batches', type=int, default=10000)
+    parser.add_argument("--num_epochs", type=int, default=20)
     parser.add_argument("--load", type=str, default=None)
     args = parser.parse_args()
     return args
@@ -57,8 +56,8 @@ def test(model, dataset, show_k=10):
     dataloader = dataset.get_test_epoch()
     acc_list = []
     for i, (ciphertext, plaintext) in enumerate(dataloader):
-        probs = model(ciphertext[:, 1:])
-        acc = model.accuracy(probs, plaintext[:, 1:])
+        probs = model(ciphertext)
+        acc = model.accuracy(probs, plaintext)
         acc_list.append(acc)
         if i < show_k:
             print(detokenize(plaintext[0]), "\t", detokenize(
@@ -85,9 +84,9 @@ def get_dataset(args):
     if args.dataset == "CAESAR":
         return CaesarDataset(range(36), args.batch_size, args.window_size)
     elif args.dataset == "SUBSTITUTION":
-        return SubstitutionDataset(args.batch_size, args.window_size, args.epoch_batches)
+        return SubstitutionDataset(args.batch_size, args.window_size)
     elif args.dataset == "VIGENERE":
-        return VigenereDataset(args.batch_size, args.window_size, args.epoch_batches)
+        return VigenereDataset(args.batch_size, args.window_size)
 
 
 def main(args):
@@ -119,20 +118,6 @@ def main(args):
 if __name__ == '__main__':
     args = parseArguments()
     main(args)
-    # for i in range():
-
-    #     loss_list = []
-    #     optimizer = tf.keras.optimizers.Adam(learning_rate=args.learning_rate)
-    #     for e in range(args.num_epochs):
-    #         print(f'EPOCH {e} of {args.num_epochs} ------------------')
-    #         loss_list += train(model, train_dataloader, optimizer)
-
-    #         #checkpoint_path = CKPT_DIR / 'caesar_rnn' / \
-    #         #    f'{"+".join(map(lambda x: str(x), ciphers))}' / \
-    #         #    f'{e:04d}.ckpt'
-    #         #checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-    #         #model.save_weights(checkpoint_path)
-
     #     # TODO: uncomment to display loss plots
     #     #plt.plot(loss_list)
     #     #plt.show()
