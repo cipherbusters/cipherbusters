@@ -72,6 +72,7 @@ def get_substitution_batches(plaintext, batch_size):
             labels.append(tokenize(s))
         inputs = np.array(inputs)
         labels = np.array(labels)
+        i += batch_size
         yield inputs, labels
 
 def get_vigenere_batches(plaintext, batch_size):
@@ -85,5 +86,6 @@ def get_vigenere_batches(plaintext, batch_size):
             labels.append(tokenize(s))
         inputs = np.array(inputs)
         labels = np.array(labels)
+        i += batch_size
         yield inputs, labels
 
