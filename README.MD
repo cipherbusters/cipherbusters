@@ -49,7 +49,7 @@ An important hyperparameter for our machine translation task is window size. The
 
 For all results, the reader can assume that we train models for 20 epochs with a learning rate of 1e-3. Our first task is decrypting one particular Caesar cipher. Our second task is decrypting any arbitrary Caesar cipher, of which there are 36. In Figure 2, we present results from 36 experiments, where each represents the task of decrypting N particular Caesar ciphers. Clearly, N=1 is task 1 and N=36 is task 2. These experiments are trained and tested on the simple RNN for a window size of 50. We observe a negative trend in model performance as the number of Caesar ciphers we train the model to decrypt grows. The simple RNN achieves outstanding performance on task 1 but is not robust to task 2. This motivates us to explore the simple transformer and an encoder-decoder based RNN and transformer to achieve better performance on task 2. 
 
-![Figure 2. Simple RNN model performance significantly declines as we train it on an increasing number of ciphers.](rnn-caesars.png)
+![Figure 2. Simple RNN model performance significantly declines as we train it on an increasing number of ciphers.](/images/rnn-caesars.png)
 > Figure 2. Simple RNN model performance significantly declines as we train it on an increasing number of ciphers. 
 
 Figure 3 presents results for task 2 on the simple RNN, simple transformer, RNN, and transformer. All experiments are trained and tested on a window size of 50. The encoder-decoder architecture of the RNN and transformer, outlined in the pipeline in Figure 1, offers the best performance on this task. For this reason, we move forward with these architectures for tasks 3 and 4. 
@@ -62,17 +62,17 @@ Figure 3 presents results for task 2 on the simple RNN, simple transformer, RNN,
 
 > Table 2. Examples of trained transformer decrypting arbitrary Caesar ciphers. 
 
-![Figure 3. The encoder-decoder architectures exhibit the best performance on the “All Caesar” task.](all-caesars.png)
+![Figure 3. The encoder-decoder architectures exhibit the best performance on the “All Caesar” task.](/images/all-caesars.png)
 > Figure 3. The encoder-decoder architectures exhibit the best performance on the “All Caesar” task. 
 
 Before presenting results for tasks 3 and 4, we motivate our chosen window size of 50 by the following experiment. In Figure 4, we present results from 13 window size experiments, where each experiment is the test accuracy of the model [c] on the “All Caesar” task. Each experiment has a different window size. We observe that the optimal window size is ~64. Window sizes larger than this maximum begin to see decreases in performance, which we did not expect. This contradicts our intuition that the model learns more reliable information about the frequencies of ciphertext characters if more ciphertext is supplied. 
 
-![Figure 4. The optimal window size for the RNN model on the 36 Caesar cipher task is ~64. Window size does not always positively vary with accuracy.](rnn-windows.png)
+![Figure 4. The optimal window size for the RNN model on the 36 Caesar cipher task is ~64. Window size does not always positively vary with accuracy.](/images/rnn-windows.png)
 > Figure 4. The optimal window size for the RNN model on the 36 Caesar cipher task is ~64. Window size does not always positively vary with accuracy.
 
 Finally, we present results for tasks 3 and 4. Figure 5 displays performance for the transformer (model [d]) and robust transformer (model [e]) on task 3 (substitution) and task 4 (Vigènere). Worse performance on substitution compared to Vigènere indicates that the substitution task is more difficult than the Vigènere task. This is expected because Vigènere is a complexification of Caesar’s cipher, for which the models have shown extremely high performance. Overall, the robust transformer does not offer major performance gain compared to the transformer. Although 56% accuracy on Vigènere has merit given the infinite keyspace of Vigènere ciphers, it is not nearly high enough to produce sensible plaintext. Thus, we believe that these methods have reached their limit with regard to generalizing simple decryption tasks. 
 
-![Figure 5. The transformer and robust transformer exhibit better performance on the Vigènere task compared to the substitution task. The robust transformer only offers slight performance gains.](vigenere-substitution.png)
+![Figure 5. The transformer and robust transformer exhibit better performance on the Vigènere task compared to the substitution task. The robust transformer only offers slight performance gains.](/images/vigenere-substitution.png)
 > Figure 5. The transformer and robust transformer exhibit better performance on the Vigènere task compared to the substitution task. The robust transformer only offers slight performance gains.
 
 ## Challenges
